@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Asemian Airlines - رزرو بلیط</title>
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; background: linear-gradient(135deg,#093028,#237A57); color:#111; margin:0; padding:20px; direction:rtl; }
+    .card { max-width:1100px; margin:20px auto; background:white; border-radius:12px; padding:16px; box-shadow:0 8px 30px rgba(0,0,0,0.18); }
+    h1 { margin:0 0 6px 0; }
+    label { display:block; font-size:14px; margin-bottom:6px; }
+    input, select { width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; }
+    .row { display:flex; gap:12px; }
+    .col { flex:1; }
+    .actions { display:flex; gap:12px; justify-content:flex-start; align-items:center; margin-top:10px; }
+    button { padding:10px 14px; border-radius:8px; border:none; cursor:pointer; font-weight:bold; }
+    .btn-primary { background:#ff7a00; color:white; }
+    .btn-secondary { background:#eee; color:#111; }
+    .result { background:#f7f7f7; padding:12px; border-radius:8px; margin-top:12px; }
+    .hidden { display:none; }
+    .passenger-block { border:1px solid #eee; padding:10px; border-radius:8px; margin-bottom:10px; background:#fafafa; }
+    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    img.air { width:320px; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.12); }
+    @media (max-width:900px) { .row { flex-direction:column; } img.air { width:100%; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header class="flex-between" style="align-items:flex-start;">
+      <div style="flex:1">
+        <h1>✈️ Asemian Airlines — رزرو بلیط</h1>
+      </div>
+      <div style="flex:0 0 340px; text-align:left;">
+        
+      </div>
+    </header>
+
+    <form id="bookingForm" onsubmit="return handleSubmit(event)">
+      <section>
+        <h3>جزئیات مسیر</h3>
+        <div class="row">
+          <div class="col">
+            <label>مبدا</label>
+            <select id="origin" required>
+              <option value="Tehran">Tehran</option>
+              <option value="Tabriz">Tabriz</option>
+              <option value="Istanbul">Istanbul</option>
+              <option value="Dubai">Dubai</option>
+              <option value="New York">New York</option>
+              <option value="Los Angeles">Los Angeles</option>
+              <option value="Toronto">Toronto</option>
+              <option value="London">London</option>
+              <option value="Paris">Paris</option>
+              <option value="Moscow">Moscow</option>
+              <option value="Vancouver">Vancouver</option>
+            
+              <option value="Frankfurt">Frankfurt</option>
+              <option value="Madrid">Madrid</option>
+              <option value="Hong Kong">Hong Kong</option>
+              <option value="Tel Aviv">Tel Aviv</option>
+              <option value="Mecca">Mecca</option>
+              <option value="Bern">Bern</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>مقصد</label>
+            <select id="destination" required>
+              <option value="Tehran">Tehran</option>
+              <option value="Tabriz">Tabriz</option>
+              <option value="Istanbul">Istanbul</option>
+              <option value="Dubai">Dubai</option>
+              <option value="New York">New York</option>
+              <option value="Los Angeles">Los Angeles</option>
+              <option value="Toronto">Toronto</option>
+              <option value="London">London</option>
+              <option value="Paris">Paris</option>
+              <option value="Moscow">Moscow</option>
+              <option value="Vancouver">Vancouver</option>
+            
+              <option value="Frankfurt">Frankfurt</option>
+              <option value="Madrid">Madrid</option>
+              <option value="Hong Kong">Hong Kong</option>
+              <option value="Tel Aviv">Tel Aviv</option>
+              <option value="Mecca">Mecca</option>
+              <option value="Bern">Bern</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label>نوع سفر</label>
+            <select id="tripType" onchange="toggleReturn()" >
+              <option value="round">رفت و برگشت</option>
+              <option value="oneway">یکطرفه</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>تعداد مسافران</label>
+            <input type="number" id="passengers" min="1" value="1" onchange="renderPassengerForms()" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label>تاریخ رفت</label>
+            <input type="date" id="departDate" required />
+          </div>
+          <div class="col" id="returnCol">
+            <label>تاریخ برگشت</label>
+            <input type="date" id="returnDate" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label>کلاس</label>
+            <select id="classType">
+              <option>Economy</option>
+              <option>Business</option>
+              <option>First</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>ایمیل (اختیاری)</label>
+            <input id="email" placeholder="example@mail.com" type="email" />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h3>اطلاعات مسافران</h3>
+        <div id="passengerForms"></div>
+      </section>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary">خرید و صدور بلیط</button>
+        <button type="button" class="btn-secondary" onclick="resetForm()">بازنشانی فرم</button>
+      </div>
+    </form>
+
+    <div id="resultBox" class="result hidden"></div>
+
+  </div>
+
+  <script>
+    // initialize
+    const cities = ["Tehran", "Tabriz", "Istanbul", "Dubai", "New York", "Los Angeles", "Toronto", "London", "Paris", "Moscow", "Vancouver"];
+    document.getElementById('destination').value = 'Vancouver';
+    document.getElementById('origin').value = 'Tehran';
+
+    function toggleReturn() {
+      const t = document.getElementById('tripType').value;
+      const rc = document.getElementById('returnCol');
+      if (t === 'oneway') {
+        rc.style.display = 'none';
+        document.getElementById('returnDate').value = '';
+      } else {
+        rc.style.display = 'block';
+      }
+    }
+    toggleReturn();
+
+    function renderPassengerForms() {
+      const container = document.getElementById('passengerForms');
+      container.innerHTML = '';
+      let n = Number(document.getElementById('passengers').value) || 1;
+      n = Math.max(1, Math.min(10, n)); // limit to 10 for sanity
+      for (let i=0;i<n;i++) {
+        const div = document.createElement('div');
+        div.className = 'passenger-block';
+        div.innerHTML = `
+          <div style="font-weight:bold; margin-bottom:6px;">مسافر ${i+1}</div>
+          <div class="row">
+            <div class="col"><label>نام</label><input required class="p-firstName" placeholder="مثلاً: علی"></div>
+            <div class="col"><label>نام خانوادگی</label><input required class="p-lastName" placeholder="مثلاً: رضایی"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>شماره تلفن</label><input required class="p-phone" placeholder="+98 912 123 4567"></div>
+            <div class="col"><label>شماره گذرنامه</label><input required class="p-passport" placeholder="AB1234567"></div>
+          </div>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    // initial render
+    renderPassengerForms();
+
+    function validateForm(data) {
+      if (!data.departDate) return 'تاریخ رفت را انتخاب کنید.';
+      if (data.tripType === 'round' && !data.returnDate) return 'تاریخ برگشت را انتخاب کنید.';
+      if (data.origin === data.destination) return 'مبدا و مقصد نباید یکسان باشند.';
+      // validate passenger fields
+      for (let i=0;i<data.passengerDetails.length;i++) {
+        const p = data.passengerDetails[i];
+        if (!p.firstName.trim()) return `نام مسافر ${i+1} را وارد کنید.`;
+        if (!p.lastName.trim()) return `نام خانوادگی مسافر ${i+1} را وارد کنید.`;
+        if (!p.phone.trim()) return `شماره تلفن مسافر ${i+1} را وارد کنید.`;
+        if (!p.passport.trim()) return `شماره گذرنامه مسافر ${i+1} را وارد کنید.`;
+      }
+      return '';
+    }
+
+    function collectPassengerData() {
+      const container = document.getElementById('passengerForms');
+      const blocks = container.querySelectorAll('.passenger-block');
+      const arr = [];
+      blocks.forEach(b => {
+        const firstName = b.querySelector('.p-firstName').value || '';
+        const lastName = b.querySelector('.p-lastName').value || '';
+        const phone = b.querySelector('.p-phone').value || '';
+        const passport = b.querySelector('.p-passport').value || '';
+        arr.push({firstName, lastName, phone, passport});
+      });
+      return arr;
+    }
+
+    function createTicketObject(form) {
+      const id = 'ASE-' + Date.now().toString().slice(-8);
+      return {
+        id, airline: 'Asemian Airlines',
+        origin: form.origin, destination: form.destination,
+        departDate: form.departDate, returnDate: form.returnDate || null,
+        passengers: form.passengers, class: form.classType, tripType: form.tripType,
+        passengerDetails: form.passengerDetails, issuedAt: new Date().toISOString()
+      };
+    }
+
+    function downloadJson(filename, data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function calculatePrice(classType, tripType, passengers) {
+      let basePrice = 150; // Economy
+      if (classType === "Business") basePrice = 300;
+      if (classType === "First") basePrice = 500;
+      if (tripType === "round") basePrice *= 2;
+      return basePrice * passengers;
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const form = {
+        origin: document.getElementById('origin').value,
+        destination: document.getElementById('destination').value,
+        departDate: document.getElementById('departDate').value,
+        returnDate: document.getElementById('returnDate').value,
+        passengers: Number(document.getElementById('passengers').value) || 1,
+        classType: document.getElementById('classType').value,
+        tripType: document.getElementById('tripType').value,
+        passengerDetails: collectPassengerData(),
+        email: document.getElementById('email').value || ''
+      };
+      const err = validateForm(form);
+      const resultBox = document.getElementById('resultBox');
+      if (err) {
+        resultBox.classList.remove('hidden');
+        resultBox.innerHTML = '<strong style="color:#c0392b">خطا:</strong> ' + err;
+        return;
+      }
+      const ticket = createTicketObject(form);
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `
+        <div><strong>کد بلیط:</strong> ${ticket.id}</div>
+        <div><strong>مبدا → مقصد:</strong> ${ticket.origin} → ${ticket.destination}</div>
+        <div><strong>رفت:</strong> ${ticket.departDate} ${ ticket.tripType==='round' ? (' | برگشت: ' + ticket.returnDate) : '' }</div>
+        <div><strong>تعداد مسافران:</strong> ${ticket.passengers}</div>
+        <div><strong>کلاس:</strong> ${ticket.class}</div>
+        <div style="margin-top:8px;">
+          <button class="btn-primary" id="downloadBtn">دانلود بلیط (JSON)</button>
+          <button class="btn-secondary" id="copyBtn">کپی JSON</button>
+        </div>
+      
+  <div style="font-size:18px; color:#0f4c81; margin:8px 0;"><strong>💵 قیمت کل:</strong> ${calculatePrice(form.classType, form.tripType, form.passengers)} دلار</div>`;
+      document.getElementById('downloadBtn').addEventListener('click', function(){ downloadJson(ticket.id + '_ticket.json', ticket); });
+      document.getElementById('copyBtn').addEventListener('click', function(){ navigator.clipboard.writeText(JSON.stringify(ticket,null,2)).then(()=>alert('JSON کپی شد')); });
+      try { localStorage.setItem('lastTicket', JSON.stringify(ticket)); } catch(e){}
+      return false;
+    }
+
+    function resetForm() {
+      document.getElementById('bookingForm').reset();
+      document.getElementById('passengerForms').innerHTML = '';
+      document.getElementById('passengers').value = 1;
+      renderPassengerForms();
+      toggleReturn();
+      document.getElementById('resultBox').classList.add('hidden');
+      document.getElementById('resultBox').innerHTML = '';
+    }
+  </script>
+</body>
+</html>
